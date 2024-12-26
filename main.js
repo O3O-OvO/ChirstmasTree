@@ -395,7 +395,7 @@ async function createText() {
         const loader = new FontLoader();
         const font = await loadWithRetry(
             loader,
-            'https://threejs.org/examples/fonts/optimer_bold.typeface.json'
+            'https://cdn.jsdelivr.net/npm/three@0.159.0/examples/fonts/optimer_bold.typeface.json'
         );
         
         debug('字体加载成功，开始创建文字');
@@ -404,7 +404,7 @@ async function createText() {
             font: font,
             size: 1,               // 增大字体大小
             height: 0.2,           // 增加厚度
-            curveSegments: 24,     // 增加曲分以获得更平滑的效果
+            curveSegments: 24,     // 增加曲线细分以获得更平滑的效果
             bevelEnabled: true,
             bevelThickness: 0.001,   // 增加斜角厚度
             bevelSize: 0.001,        // 增加斜角大小
