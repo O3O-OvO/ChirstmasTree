@@ -55,10 +55,13 @@ const renderer = new THREE.WebGLRenderer({
     stencil: false,
     precision: "mediump"
 });
+debug('渲染器创建成功');
+
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 document.getElementById('container').appendChild(renderer.domElement);
+debug('渲染器初始化完成');
 
 // 优化性能
 renderer.shadowMap.enabled = false;
@@ -70,20 +73,28 @@ scene.add(ambientLight);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
 directionalLight.position.set(10, 20, 10);
 scene.add(directionalLight);
+debug('灯光添加完成');
 
-// 添加后期处理
-composer = new EffectComposer(renderer);
-const renderPass = new RenderPass(scene, camera);
-composer.addPass(renderPass);
+try {
+    debug('开始初始化后期处理...');
+    // 添加后期处理
+    composer = new EffectComposer(renderer);
+    const renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
+    debug('后期处理初始化成功');
 
-// 添加发光效果
-bloomPass = new UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.8,
-    0.3,
-    0.75
-);
-composer.addPass(bloomPass);
+    // 添加发光效果
+    bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        0.8,
+        0.3,
+        0.75
+    );
+    composer.addPass(bloomPass);
+    debug('发光效果添加成功');
+} catch (error) {
+    debug('后期处理初始化失败: ' + error.message);
+}
 
 // 处理窗口大小变化
 let resizeTimeout;
@@ -350,6 +361,7 @@ function animate() {
 
     // 添加新粒子
     if (currentHeight < treeHeight && currentParticle < maxParticles) {
+        debug(`树生长进度: ${Math.round((currentHeight / treeHeight) * 100)}%`);
         // 树正在生长时，相机逐渐后移
         const progress = currentHeight / treeHeight;
         camera.position.z = 10 + progress * 10; // 从10到20
@@ -397,18 +409,22 @@ function animate() {
         geometry.attributes.size.needsUpdate = true;
     } else if (!isTreeComplete) {
         isTreeComplete = true;
+        debug('树生成完成，开始相机动画');
         
         // 树生成完成后，相机缓慢移动到最终位置
         gsap.to(camera.position, {
             z: 20,
             y: 10,
             duration: 2,
-            ease: "power2.inOut"
+            ease: "power2.inOut",
+            onComplete: () => debug('相机动画完成')
         });
         
         // 延迟1秒后创建并动画文字
         setTimeout(() => {
+            debug('开始创建文字');
             createText().then(textMesh => {
+                debug('文字创建成功，开始动画');
                 // 从左到右显示文字
                 gsap.fromTo(textMesh.material,
                     { opacity: 0 },
@@ -427,7 +443,7 @@ function animate() {
                     ease: "back.out(1.7)"
                 });
             }).catch(error => {
-                console.error('创建文字失败:', error);
+                debug('创建文字失败: ' + error.message);
             });
         }, 1000);
     }
