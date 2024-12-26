@@ -7,11 +7,41 @@ camera.position.set(0, 5, 10);
 camera.lookAt(0, 0, 0);
 
 // 创建渲染器
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ 
+    antialias: true,
+    powerPreference: "high-performance",
+    alpha: true
+});
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 限制像素比
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 document.body.appendChild(renderer.domElement);
+
+// 防止iOS设备上的默认触摸行为
+document.addEventListener('touchstart', (e) => {
+    if (e.touches.length > 1) {
+        e.preventDefault();
+    }
+}, { passive: false });
+
+document.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+}, { passive: false });
+
+// 处理iOS设备上的方向变化
+window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        
+        renderer.setSize(width, height);
+        composer.setSize(width, height);
+        bloomPass.setSize(width, height);
+    }, 100);
+});
 
 // 添加后期处理
 const composer = new THREE.EffectComposer(renderer);
@@ -185,7 +215,7 @@ function createSnow() {
 
 const snow = createSnow();
 
-// 在动画函数中更新雪花
+// ��动画函数中更新雪花
 function updateSnow() {
     snow.time += 0.002;
     const positions = snow.mesh.geometry.attributes.position.array;
@@ -230,7 +260,7 @@ async function createText() {
     const textGeometry = new TextGeometry(text, {
         font: font,
         size: 1,               // 增大字体大小
-        height: 0.2,           // 增��厚度
+        height: 0.2,           // 增加厚度
         curveSegments: 24,     // 增加曲线细分以获得更平滑的效果
         bevelEnabled: true,
         bevelThickness: 0.001,   // 增加斜角厚度
