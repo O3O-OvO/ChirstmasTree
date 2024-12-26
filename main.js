@@ -5,9 +5,8 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
-// 在文件开头添加调试函数
+/* 调试函数 - 暂时注释
 function debug(message) {
-    // 创建或获取调试元素
     let debugElement = document.getElementById('debug-info');
     if (!debugElement) {
         debugElement = document.createElement('div');
@@ -31,11 +30,11 @@ function debug(message) {
     debugElement.innerHTML = message + '<br>' + debugElement.innerHTML;
 }
 
-// 添加错误处理
 window.onerror = function(msg, url, line, col, error) {
     debug(`Error: ${msg}<br>Line: ${line}<br>Column: ${col}`);
     return false;
 };
+*/
 
 // 创建场景
 const scene = new THREE.Scene();
@@ -66,47 +65,28 @@ document.getElementById('container').appendChild(renderer.domElement);
 renderer.shadowMap.enabled = false;
 
 // 添加灯光
-const ambientLight = new THREE.AmbientLight(0x404040, 2); // 增加环境光强度
+const ambientLight = new THREE.AmbientLight(0x404040, 2);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 2); // 增加直射光强度
+const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
 directionalLight.position.set(10, 20, 10);
 scene.add(directionalLight);
 
-try {
-    debug('正在初始化后期处理...');
-    // 添加后期处理
-    composer = new EffectComposer(renderer);
-    const renderPass = new RenderPass(scene, camera);
-    composer.addPass(renderPass);
-    debug('后期处理初始化成功');
+// 添加后期处理
+composer = new EffectComposer(renderer);
+const renderPass = new RenderPass(scene, camera);
+composer.addPass(renderPass);
 
-    // 添加发光效果
-    bloomPass = new UnrealBloomPass(
-        new THREE.Vector2(window.innerWidth, window.innerHeight),
-        0.8,    // 发光强度
-        0.3,    // 发光半径
-        0.75    // 发光阈值
-    );
-    composer.addPass(bloomPass);
-    debug('发光效果添加成功');
-} catch (error) {
-    debug('后期处理初始化失败: ' + error.message);
-    // 如果后期处理初始化失败，使用普通渲染
-    composer = {
-        render: function() {
-            renderer.render(scene, camera);
-        },
-        setSize: function(width, height) {
-            renderer.setSize(width, height);
-        }
-    };
-    bloomPass = {
-        setSize: function() {}
-    };
-}
+// 添加发光效果
+bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    0.8,
+    0.3,
+    0.75
+);
+composer.addPass(bloomPass);
 
-// 处理iOS设备上的方向变化
+// 处理窗口大小变化
 let resizeTimeout;
 function handleResize() {
     clearTimeout(resizeTimeout);
@@ -120,27 +100,10 @@ function handleResize() {
         renderer.setSize(width, height);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         
-        if (composer) {
-            composer.setSize(width, height);
-        }
-        if (bloomPass) {
-            bloomPass.setSize(width, height);
-        }
+        composer.setSize(width, height);
+        bloomPass.setSize(width, height);
     }, 250);
 }
-
-// 防止iOS设备上的默认触摸行为
-function preventDefaultTouch(e) {
-    if (e.touches.length > 1) {
-        e.preventDefault();
-    }
-}
-
-document.addEventListener('touchstart', preventDefaultTouch, { passive: false });
-document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
-document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
-document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
-document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
 
 window.addEventListener('resize', handleResize);
 window.addEventListener('orientationchange', () => {
@@ -326,21 +289,17 @@ function updateSnow() {
 
 // 创建文字
 async function createText() {
-    debug('开始加载字体');
     const loader = new FontLoader();
     try {
         const font = await new Promise((resolve, reject) => {
             loader.load(
                 'https://threejs.org/examples/fonts/optimer_bold.typeface.json',
                 (font) => {
-                    debug('字体加载成功');
                     resolve(font);
                 },
                 (progress) => {
-                    debug(`字体加载进度: ${Math.round(progress.loaded / progress.total * 100)}%`);
                 },
                 (error) => {
-                    debug('字体加载失败: ' + error);
                     reject(error);
                 }
             );
@@ -374,7 +333,7 @@ async function createText() {
         });
 
         const textMesh = new THREE.Mesh(textGeometry, material);
-        textMesh.position.x = -textWidth / 2;  // 水平居中
+        textMesh.position.x = -textWidth / 2;  // ��平居中
         textMesh.position.z = 0;               // 放在中间
         textMesh.position.y = treeHeight * 0.4;  // 垂直位置调整到树的中部偏下
         textMesh.rotation.x = 0;               // 移除倾斜角度
@@ -382,7 +341,6 @@ async function createText() {
         scene.add(textMesh);
         return textMesh;
     } catch (error) {
-        debug('创建文字失败: ' + error.message);
         throw error;
     }
 }
