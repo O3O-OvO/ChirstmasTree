@@ -5,9 +5,41 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
+// 加载管理器
+const loadingManager = new THREE.LoadingManager(
+    // 加载完成
+    () => {
+        const loadingElement = document.getElementById('loading');
+        if (loadingElement) {
+            loadingElement.style.display = 'none';
+        }
+        debug('所有资源加载完成');
+    },
+    // 加载进度
+    (url, itemsLoaded, itemsTotal) => {
+        const progress = (itemsLoaded / itemsTotal * 100).toFixed(0);
+        const loadingElement = document.getElementById('loading');
+        if (loadingElement) {
+            loadingElement.innerHTML = `
+                <div class="spinner"></div>
+                <div>加载中... ${progress}%</div>
+            `;
+        }
+        debug(`加载进度: ${progress}%`);
+    },
+    // 加载错误
+    (url) => {
+        const loadingElement = document.getElementById('loading');
+        if (loadingElement) {
+            loadingElement.innerHTML = '加载失败，请刷新重试';
+        }
+        debug(`加载失败: ${url}`);
+    }
+);
+
 // 调试函数
 function debug(message) {
-    console.log(message); // 添加控制台输出
+    console.log(message);
     let debugElement = document.getElementById('debug-info');
     if (!debugElement) {
         debugElement = document.createElement('div');
@@ -31,11 +63,15 @@ function debug(message) {
     debugElement.innerHTML = message + '<br>' + debugElement.innerHTML;
 }
 
-// 错误处理函数
+// 错误处理
 window.onerror = function(msg, url, line, col, error) {
     const errorMessage = `Error: ${msg}<br>URL: ${url}<br>Line: ${line}<br>Column: ${col}`;
     debug(errorMessage);
-    console.error(errorMessage); // 添加控制台错误输出
+    console.error(errorMessage);
+    const loadingElement = document.getElementById('loading');
+    if (loadingElement) {
+        loadingElement.innerHTML = '发生错误，请刷新重试';
+    }
     return false;
 };
 
@@ -183,7 +219,7 @@ let currentHeight = 0;
 const growthSpeed = 0.05;
 const rotationSpeed = 0.05;
 let currentRotation = 0;
-let isTreeComplete = false;  // 添加标志来判断树��否创建完成
+let isTreeComplete = false;  // 添加标志来判断树否创建完成
 let treeRotation = 0;       // 添加树的整旋转角度
 
 // 颜色组
