@@ -45,6 +45,10 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 camera.position.set(0, 5, 10);
 camera.lookAt(0, 0, 0);
 
+// 声明全局变量
+let composer;
+let bloomPass;
+
 // 创建渲染器
 const renderer = new THREE.WebGLRenderer({ 
     antialias: true,
@@ -60,21 +64,47 @@ document.getElementById('container').appendChild(renderer.domElement);
 
 // 优化性能
 renderer.shadowMap.enabled = false;
-renderer.useLegacyLights = false;  // 使用新的光照系统
 
-// 添加后期处理
-const composer = new EffectComposer(renderer);
-const renderPass = new RenderPass(scene, camera);
-composer.addPass(renderPass);
+// 添加灯光
+const ambientLight = new THREE.AmbientLight(0x404040, 2); // 增加环境光强度
+scene.add(ambientLight);
 
-// 添加发光效果
-const bloomPass = new UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.8,    // 发光强度
-    0.3,    // 发光半径
-    0.75    // 发光阈值
-);
-composer.addPass(bloomPass);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 2); // 增加直射光强度
+directionalLight.position.set(10, 20, 10);
+scene.add(directionalLight);
+
+try {
+    debug('正在初始化后期处理...');
+    // 添加后期处理
+    composer = new EffectComposer(renderer);
+    const renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
+    debug('后期处理初始化成功');
+
+    // 添加发光效果
+    bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        0.8,    // 发光强度
+        0.3,    // 发光半径
+        0.75    // 发光阈值
+    );
+    composer.addPass(bloomPass);
+    debug('发光效果添加成功');
+} catch (error) {
+    debug('后期处理初始化失败: ' + error.message);
+    // 如果后期处理初始化失败，使用普通渲染
+    composer = {
+        render: function() {
+            renderer.render(scene, camera);
+        },
+        setSize: function(width, height) {
+            renderer.setSize(width, height);
+        }
+    };
+    bloomPass = {
+        setSize: function() {}
+    };
+}
 
 // 处理iOS设备上的方向变化
 let resizeTimeout;
@@ -90,8 +120,12 @@ function handleResize() {
         renderer.setSize(width, height);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         
-        composer.setSize(width, height);
-        bloomPass.setSize(width, height);
+        if (composer) {
+            composer.setSize(width, height);
+        }
+        if (bloomPass) {
+            bloomPass.setSize(width, height);
+        }
     }, 250);
 }
 
@@ -113,13 +147,6 @@ window.addEventListener('orientationchange', () => {
     setTimeout(handleResize, 100);
 });
 
-// 添加灯光
-const ambientLight = new THREE.AmbientLight(0x404040);
-scene.add(ambientLight);
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-directionalLight.position.set(10, 20, 10);
-scene.add(directionalLight);
-
 // 树的参数
 const treeHeight = 15;
 const maxParticles = 2000;
@@ -131,7 +158,7 @@ let currentRotation = 0;
 let isTreeComplete = false;  // 添加标志来判断树是否创建完成
 let treeRotation = 0;       // 添加树的整旋转角度
 
-// 颜色数组
+// 颜色组
 const colors = [
     new THREE.Color(0x1a472a), // 深绿
     new THREE.Color(0x2d5a27), // 中深绿
@@ -140,7 +167,7 @@ const colors = [
     new THREE.Color(0x7ab556), // 浅绿
     new THREE.Color(0x98c379), // 浅绿
     new THREE.Color(0xb8d957), // 黄绿
-    new THREE.Color(0xd4e157)  // 亮黄��
+    new THREE.Color(0xd4e157)  // 亮黄
 ];
 
 // 创建粒子系统
@@ -457,7 +484,7 @@ function animate() {
             const x = positions[i];
             const z = positions[i + 2];
             
-            // 应用纯旋转变换
+            // 应用纯转变换
             positions[i] = x * Math.cos(treeRotation) - z * Math.sin(treeRotation);
             positions[i + 2] = x * Math.sin(treeRotation) + z * Math.cos(treeRotation);
         }
