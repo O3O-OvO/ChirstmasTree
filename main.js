@@ -7,6 +7,7 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
 // 调试函数
 function debug(message) {
+    console.log(message); // 添加控制台输出
     let debugElement = document.getElementById('debug-info');
     if (!debugElement) {
         debugElement = document.createElement('div');
@@ -30,10 +31,64 @@ function debug(message) {
     debugElement.innerHTML = message + '<br>' + debugElement.innerHTML;
 }
 
+// 错误处理函数
 window.onerror = function(msg, url, line, col, error) {
-    debug(`Error: ${msg}<br>Line: ${line}<br>Column: ${col}`);
+    const errorMessage = `Error: ${msg}<br>URL: ${url}<br>Line: ${line}<br>Column: ${col}`;
+    debug(errorMessage);
+    console.error(errorMessage); // 添加控制台错误输出
     return false;
 };
+
+// 添加未捕获的Promise错误处理
+window.addEventListener('unhandledrejection', function(event) {
+    debug('Promise错误: ' + event.reason);
+    console.error('Promise错误:', event.reason);
+});
+
+// 添加资源加载错误处理
+window.addEventListener('error', function(event) {
+    if (event.target.tagName === 'SCRIPT' || event.target.tagName === 'LINK') {
+        debug('资源加载失败: ' + event.target.src || event.target.href);
+        console.error('资源加载失败:', event.target.src || event.target.href);
+    }
+}, true);
+
+// 检查网络连接状态
+window.addEventListener('online', function() {
+    debug('网络连接已恢复');
+    console.log('网络连接已恢复');
+});
+
+window.addEventListener('offline', function() {
+    debug('网络连接已断开');
+    console.error('网络连接已断开');
+});
+
+// 添加重试逻辑的加载函数
+async function loadWithRetry(loader, url, maxRetries = 3) {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            debug(`尝试加载 ${url} (第 ${i + 1} 次)`);
+            const result = await new Promise((resolve, reject) => {
+                loader.load(
+                    url,
+                    resolve,
+                    (progress) => {
+                        const percent = Math.round((progress.loaded / progress.total) * 100);
+                        debug(`加载进度: ${percent}%`);
+                    },
+                    reject
+                );
+            });
+            debug(`成功加载 ${url}`);
+            return result;
+        } catch (error) {
+            debug(`加载失败 (第 ${i + 1} 次): ${error.message}`);
+            if (i === maxRetries - 1) throw error;
+            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // 递增重试延迟
+        }
+    }
+}
 
 // 创建场景
 const scene = new THREE.Scene();
@@ -128,7 +183,7 @@ let currentHeight = 0;
 const growthSpeed = 0.05;
 const rotationSpeed = 0.05;
 let currentRotation = 0;
-let isTreeComplete = false;  // 添加标志来判断树是否创建完成
+let isTreeComplete = false;  // 添加标志来判断树��否创建完成
 let treeRotation = 0;       // 添加树的整旋转角度
 
 // 颜色组
@@ -299,22 +354,14 @@ function updateSnow() {
 
 // 创建文字
 async function createText() {
-    const loader = new FontLoader();
     try {
-        const font = await new Promise((resolve, reject) => {
-            loader.load(
-                'https://threejs.org/examples/fonts/optimer_bold.typeface.json',
-                (font) => {
-                    resolve(font);
-                },
-                (progress) => {
-                },
-                (error) => {
-                    reject(error);
-                }
-            );
-        });
-
+        const loader = new FontLoader();
+        const font = await loadWithRetry(
+            loader,
+            'https://threejs.org/examples/fonts/optimer_bold.typeface.json'
+        );
+        
+        debug('字体加载成功，开始创建文字');
         const text = 'Merry Christmas';
         const textGeometry = new TextGeometry(text, {
             font: font,
@@ -351,6 +398,7 @@ async function createText() {
         scene.add(textMesh);
         return textMesh;
     } catch (error) {
+        debug('创建文字最终失败: ' + error.message);
         throw error;
     }
 }
