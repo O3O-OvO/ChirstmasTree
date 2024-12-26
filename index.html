@@ -118,57 +118,12 @@
         <div class="error-message"></div>
         <button class="retry-button" style="display: none;" onclick="window.location.reload()">重试</button>
     </div>
+    
+    <!-- 错误处理脚本 -->
     <script>
-        // 检测浏览器支持
+        // 检测浏览器���持
         if (!window.WebGLRenderingContext) {
             document.querySelector('#loading').innerHTML = '您的浏览器不支持WebGL，请使用现代浏览器访问。';
-        }
-
-        // 添加资源预加载
-        const preloadResources = [
-            'https://cdn.bootcdn.net/ajax/libs/three.js/0.159.0/three.min.js',
-            'https://cdn.bootcdn.net/ajax/libs/gsap/3.12.2/gsap.min.js'
-        ];
-
-        Promise.all(preloadResources.map(url => 
-            fetch(url, { method: 'HEAD' })
-                .then(response => {
-                    if (!response.ok) throw new Error(`Failed to load ${url}`);
-                })
-        )).then(() => {
-            // 资源预加载成功，加载主要脚本
-            loadMainScripts();
-        }).catch(error => {
-            console.error('Resource preload failed:', error);
-            document.querySelector('#loading .error-message').textContent = '资源加载失败，请检查网络连接';
-            document.querySelector('#loading .retry-button').style.display = 'block';
-        });
-
-        function loadMainScripts() {
-            const scripts = [
-                { src: 'https://cdn.bootcdn.net/ajax/libs/three.js/0.159.0/three.min.js' },
-                { src: 'https://cdn.bootcdn.net/ajax/libs/gsap/3.12.2/gsap.min.js' },
-                { src: 'main.js', type: 'module' }
-            ];
-
-            let loaded = 0;
-            scripts.forEach(script => {
-                const el = document.createElement('script');
-                el.src = script.src;
-                if (script.type) el.type = script.type;
-                el.onload = () => {
-                    loaded++;
-                    if (loaded === scripts.length) {
-                        console.log('All scripts loaded successfully');
-                    }
-                };
-                el.onerror = (error) => {
-                    console.error('Script load failed:', error);
-                    document.querySelector('#loading .error-message').textContent = '脚本加载失败，请刷新重试';
-                    document.querySelector('#loading .retry-button').style.display = 'block';
-                };
-                document.body.appendChild(el);
-            });
         }
 
         // 添加错误处理
@@ -195,6 +150,9 @@
             document.querySelector('#loading .retry-button').style.display = 'block';
         });
     </script>
+    
+    <!-- 主程序 -->
+    <script type="module" src="./main.js"></script>
 </body>
 </html>
 
