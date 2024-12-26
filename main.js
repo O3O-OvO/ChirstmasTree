@@ -5,6 +5,38 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
+// 在文件开头添加调试函数
+function debug(message) {
+    // 创建或获取调试元素
+    let debugElement = document.getElementById('debug-info');
+    if (!debugElement) {
+        debugElement = document.createElement('div');
+        debugElement.id = 'debug-info';
+        debugElement.style.cssText = `
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 9999;
+            max-width: 80%;
+            max-height: 50%;
+            overflow: auto;
+        `;
+        document.body.appendChild(debugElement);
+    }
+    debugElement.innerHTML = message + '<br>' + debugElement.innerHTML;
+}
+
+// 添加错误处理
+window.onerror = function(msg, url, line, col, error) {
+    debug(`Error: ${msg}<br>Line: ${line}<br>Column: ${col}`);
+    return false;
+};
+
 // 创建场景
 const scene = new THREE.Scene();
 
@@ -28,7 +60,7 @@ document.getElementById('container').appendChild(renderer.domElement);
 
 // 优化性能
 renderer.shadowMap.enabled = false;
-renderer.useLegacyLights = false;  // 使���新的光照系统
+renderer.useLegacyLights = false;  // 使用新的光照系统
 
 // 添加后期处理
 const composer = new EffectComposer(renderer);
@@ -108,7 +140,7 @@ const colors = [
     new THREE.Color(0x7ab556), // 浅绿
     new THREE.Color(0x98c379), // 浅绿
     new THREE.Color(0xb8d957), // 黄绿
-    new THREE.Color(0xd4e157)  // 亮黄绿
+    new THREE.Color(0xd4e157)  // 亮黄��
 ];
 
 // 创建粒子系统
@@ -204,7 +236,7 @@ function createSnow() {
     canvas.height = 32;
     const ctx = canvas.getContext('2d');
     
-    // 创建径向渐��
+    // 创建径向渐变
     const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
     gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
     gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
@@ -267,54 +299,65 @@ function updateSnow() {
 
 // 创建文字
 async function createText() {
+    debug('开始加载字体');
     const loader = new FontLoader();
-    const font = await new Promise((resolve, reject) => {
-        loader.load(
-            'https://threejs.org/examples/fonts/optimer_bold.typeface.json',  // 更换为优雅的粗体衬线字体
-            resolve,
-            undefined,
-            (error) => {
-                console.error('体加载失败:', error);
-                reject(error);
-            }
-        );
-    });
+    try {
+        const font = await new Promise((resolve, reject) => {
+            loader.load(
+                'https://threejs.org/examples/fonts/optimer_bold.typeface.json',
+                (font) => {
+                    debug('字体加载成功');
+                    resolve(font);
+                },
+                (progress) => {
+                    debug(`字体加载进度: ${Math.round(progress.loaded / progress.total * 100)}%`);
+                },
+                (error) => {
+                    debug('字体加载失败: ' + error);
+                    reject(error);
+                }
+            );
+        });
 
-    const text = 'Merry Christmas';
-    const textGeometry = new TextGeometry(text, {
-        font: font,
-        size: 1,               // 增大字体大小
-        height: 0.2,           // 增加厚度
-        curveSegments: 24,     // 增加曲线细分以获得更平滑的效果
-        bevelEnabled: true,
-        bevelThickness: 0.001,   // 增加斜角厚度
-        bevelSize: 0.001,        // 增加斜角大小
-        bevelSegments: 10
-    });
+        const text = 'Merry Christmas';
+        const textGeometry = new TextGeometry(text, {
+            font: font,
+            size: 1,               // 增大字体大小
+            height: 0.2,           // 增加厚度
+            curveSegments: 24,     // 增加曲线细分以获得更平滑的效果
+            bevelEnabled: true,
+            bevelThickness: 0.001,   // 增加斜角厚度
+            bevelSize: 0.001,        // 增加斜角大小
+            bevelSegments: 10
+        });
 
-    // 计算文字宽度并居中
-    textGeometry.computeBoundingBox();
-    const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
-    const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
+        // 计算文字宽度并居中
+        textGeometry.computeBoundingBox();
+        const textWidth = textGeometry.boundingBox.max.x - textGeometry.boundingBox.min.x;
+        const textHeight = textGeometry.boundingBox.max.y - textGeometry.boundingBox.min.y;
 
-    const material = new THREE.MeshPhongMaterial({
-        color: 0xfff4b8,        // 淡黄色
-        emissive: 0xfff4b8,     // 发光效果也为淡黄色
-        emissiveIntensity: 0.8,  // 增强发光强度
-        specular: 0xffffff,     // 保持白色高光
-        shininess: 100,         // 增加光泽度
-        transparent: true,
-        opacity: 0
-    });
+        const material = new THREE.MeshPhongMaterial({
+            color: 0xfff4b8,        // 淡黄色
+            emissive: 0xfff4b8,     // 发光效果也为淡黄色
+            emissiveIntensity: 0.8,  // 增强发光强度
+            specular: 0xffffff,     // 保持白色高光
+            shininess: 100,         // 增加光泽度
+            transparent: true,
+            opacity: 0
+        });
 
-    const textMesh = new THREE.Mesh(textGeometry, material);
-    textMesh.position.x = -textWidth / 2;  // 水平居中
-    textMesh.position.z = 0;               // 放在中间
-    textMesh.position.y = treeHeight * 0.4;  // 垂直位置调整到树的中部偏下
-    textMesh.rotation.x = 0;               // 移除倾斜角度
+        const textMesh = new THREE.Mesh(textGeometry, material);
+        textMesh.position.x = -textWidth / 2;  // 水平居中
+        textMesh.position.z = 0;               // 放在中间
+        textMesh.position.y = treeHeight * 0.4;  // 垂直位置调整到树的中部偏下
+        textMesh.rotation.x = 0;               // 移除倾斜角度
 
-    scene.add(textMesh);
-    return textMesh;
+        scene.add(textMesh);
+        return textMesh;
+    } catch (error) {
+        debug('创建文字失败: ' + error.message);
+        throw error;
+    }
 }
 
 // 动画函数
