@@ -1,0 +1,34 @@
+{
+  "glyphs": {
+    "M": {"ha": 1000, "x_min": 0, "x_max": 800, "o": "M 0 0 L 800 0 L 800 800 L 0 800 Z"},
+    "e": {"ha": 600, "x_min": 0, "x_max": 500, "o": "M 0 0 L 500 0 L 500 500 L 0 500 Z"},
+    "r": {"ha": 400, "x_min": 0, "x_max": 300, "o": "M 0 0 L 300 0 L 300 300 L 0 300 Z"},
+    "y": {"ha": 500, "x_min": 0, "x_max": 400, "o": "M 0 0 L 400 0 L 400 400 L 0 400 Z"},
+    "C": {"ha": 800, "x_min": 0, "x_max": 700, "o": "M 0 0 L 700 0 L 700 700 L 0 700 Z"},
+    "h": {"ha": 600, "x_min": 0, "x_max": 500, "o": "M 0 0 L 500 0 L 500 500 L 0 500 Z"},
+    "i": {"ha": 300, "x_min": 0, "x_max": 200, "o": "M 0 0 L 200 0 L 200 200 L 0 200 Z"},
+    "s": {"ha": 500, "x_min": 0, "x_max": 400, "o": "M 0 0 L 400 0 L 400 400 L 0 400 Z"},
+    "t": {"ha": 400, "x_min": 0, "x_max": 300, "o": "M 0 0 L 300 0 L 300 300 L 0 300 Z"},
+    "m": {"ha": 900, "x_min": 0, "x_max": 800, "o": "M 0 0 L 800 0 L 800 800 L 0 800 Z"},
+    "a": {"ha": 600, "x_min": 0, "x_max": 500, "o": "M 0 0 L 500 0 L 500 500 L 0 500 Z"}
+  },
+  "familyName": "Pacifico",
+  "ascender": 800,
+  "descender": -200,
+  "underlinePosition": -100,
+  "underlineThickness": 50,
+  "boundingBox": {"yMin": -200, "xMin": 0, "yMax": 800, "xMax": 800},
+  "resolution": 1000,
+  "original_font_information": {
+    "format": 0,
+    "copyright": "Copyright 2018 The Pacifico Project Authors",
+    "fontFamily": "Pacifico",
+    "fontSubfamily": "Regular",
+    "uniqueID": "Pacifico Regular",
+    "fullName": "Pacifico Regular",
+    "version": "Version 3.000",
+    "postScriptName": "Pacifico-Regular"
+  },
+  "cssFontWeight": "normal",
+  "cssFontStyle": "normal"
+} 

@@ -1,13 +1,3 @@
-import * as THREE from 'three';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { FontLoader } from 'three/addons/loaders/FontLoader.js';
-import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
-
-// 使用全局的gsap对象
-const gsap = window.gsap;
-
 // 创建场景
 const scene = new THREE.Scene();
 
@@ -19,17 +9,17 @@ camera.lookAt(0, 0, 0);
 // 创建渲染器
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // 限制像素比
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.localClippingEnabled = true;  // 启用本地剪裁
 document.body.appendChild(renderer.domElement);
 
 // 添加后期处理
-const composer = new EffectComposer(renderer);
-const renderPass = new RenderPass(scene, camera);
+const composer = new THREE.EffectComposer(renderer);
+const renderPass = new THREE.RenderPass(scene, camera);
 composer.addPass(renderPass);
 
-// 添加发光���果
-const bloomPass = new UnrealBloomPass(
+// 添加发光效果
+const bloomPass = new THREE.UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
     0.8,    // 发光强度
     0.3,    // 发光半径
@@ -240,7 +230,7 @@ async function createText() {
     const textGeometry = new TextGeometry(text, {
         font: font,
         size: 1,               // 增大字体大小
-        height: 0.2,           // 增加厚度
+        height: 0.2,           // 增��厚度
         curveSegments: 24,     // 增加曲线细分以获得更平滑的效果
         bevelEnabled: true,
         bevelThickness: 0.001,   // 增加斜角厚度
@@ -402,9 +392,15 @@ function animate() {
 
 // 窗口大小调整
 window.addEventListener('resize', () => {
+    // 更新相机
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
+    
+    // 更新渲染器
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    
+    // 更新后期处理
     composer.setSize(window.innerWidth, window.innerHeight);
     bloomPass.setSize(window.innerWidth, window.innerHeight);
 });
