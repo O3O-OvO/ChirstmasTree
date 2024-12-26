@@ -6,127 +6,6 @@ import { FontLoader } from 'https://esm.sh/three@0.159.0/examples/jsm/loaders/Fo
 import { TextGeometry } from 'https://esm.sh/three@0.159.0/examples/jsm/geometries/TextGeometry';
 import { gsap } from 'https://esm.sh/gsap@3.12.2';
 
-// 加载管理器
-const loadingManager = new THREE.LoadingManager(
-    // 加载完成
-    () => {
-        const loadingElement = document.getElementById('loading');
-        if (loadingElement) {
-            loadingElement.style.display = 'none';
-        }
-        debug('所有资源加载完成');
-    },
-    // 加载进度
-    (url, itemsLoaded, itemsTotal) => {
-        const progress = (itemsLoaded / itemsTotal * 100).toFixed(0);
-        const loadingElement = document.getElementById('loading');
-        if (loadingElement) {
-            loadingElement.innerHTML = `
-                <div class="spinner"></div>
-                <div>加载中... ${progress}%</div>
-            `;
-        }
-        debug(`加载进度: ${progress}%`);
-    },
-    // 加载错误
-    (url) => {
-        const loadingElement = document.getElementById('loading');
-        if (loadingElement) {
-            loadingElement.innerHTML = '加载失败，请刷新重试';
-        }
-        debug(`加载失败: ${url}`);
-    }
-);
-
-// 调试函数
-function debug(message) {
-    console.log(message);
-    let debugElement = document.getElementById('debug-info');
-    if (!debugElement) {
-        debugElement = document.createElement('div');
-        debugElement.id = 'debug-info';
-        debugElement.style.cssText = `
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 12px;
-            z-index: 9999;
-            max-width: 80%;
-            max-height: 50%;
-            overflow: auto;
-        `;
-        document.body.appendChild(debugElement);
-    }
-    debugElement.innerHTML = message + '<br>' + debugElement.innerHTML;
-}
-
-// 错误处理
-window.onerror = function(msg, url, line, col, error) {
-    const errorMessage = `Error: ${msg}<br>URL: ${url}<br>Line: ${line}<br>Column: ${col}`;
-    debug(errorMessage);
-    console.error(errorMessage);
-    const loadingElement = document.getElementById('loading');
-    if (loadingElement) {
-        loadingElement.innerHTML = '发生错误，请刷新重试';
-    }
-    return false;
-};
-
-// 添加未捕获的Promise错误处理
-window.addEventListener('unhandledrejection', function(event) {
-    debug('Promise错误: ' + event.reason);
-    console.error('Promise错误:', event.reason);
-});
-
-// 添加资源加载错误处理
-window.addEventListener('error', function(event) {
-    if (event.target.tagName === 'SCRIPT' || event.target.tagName === 'LINK') {
-        debug('资源加载失败: ' + event.target.src || event.target.href);
-        console.error('资源加载失败:', event.target.src || event.target.href);
-    }
-}, true);
-
-// 检查网络连接状态
-window.addEventListener('online', function() {
-    debug('网络连接已恢复');
-    console.log('网络连接已恢复');
-});
-
-window.addEventListener('offline', function() {
-    debug('网络连接已断开');
-    console.error('网络连接已断开');
-});
-
-// 添加重试逻辑的加载函数
-async function loadWithRetry(loader, url, maxRetries = 3) {
-    for (let i = 0; i < maxRetries; i++) {
-        try {
-            debug(`尝试加载 ${url} (第 ${i + 1} 次)`);
-            const result = await new Promise((resolve, reject) => {
-                loader.load(
-                    url,
-                    resolve,
-                    (progress) => {
-                        const percent = Math.round((progress.loaded / progress.total) * 100);
-                        debug(`加载进度: ${percent}%`);
-                    },
-                    reject
-                );
-            });
-            debug(`成功加载 ${url}`);
-            return result;
-        } catch (error) {
-            debug(`加载失败 (第 ${i + 1} 次): ${error.message}`);
-            if (i === maxRetries - 1) throw error;
-            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // 递增试延迟
-        }
-    }
-}
-
 // 创建场景
 const scene = new THREE.Scene();
 
@@ -147,13 +26,11 @@ const renderer = new THREE.WebGLRenderer({
     stencil: false,
     precision: "mediump"
 });
-debug('渲染器创建成功');
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 document.getElementById('container').appendChild(renderer.domElement);
-debug('渲染器初始化完成');
 
 // 优化性能
 renderer.shadowMap.enabled = false;
@@ -165,15 +42,12 @@ scene.add(ambientLight);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
 directionalLight.position.set(10, 20, 10);
 scene.add(directionalLight);
-debug('灯光添加完成');
 
 try {
-    debug('开始初始化后期处理...');
     // 添加后期处理
     composer = new EffectComposer(renderer);
     const renderPass = new RenderPass(scene, camera);
     composer.addPass(renderPass);
-    debug('后期处理初始化成功');
 
     // 添加发光效果
     bloomPass = new UnrealBloomPass(
@@ -183,9 +57,7 @@ try {
         0.75
     );
     composer.addPass(bloomPass);
-    debug('发光效果添加成功');
 } catch (error) {
-    debug('后期处理初始化失败: ' + error.message);
 }
 
 // 处理窗口大小变化
@@ -393,12 +265,15 @@ function updateSnow() {
 async function createText() {
     try {
         const loader = new FontLoader();
-        const font = await loadWithRetry(
-            loader,
-            'https://cdn.jsdelivr.net/npm/three@0.159.0/examples/fonts/optimer_bold.typeface.json'
-        );
+        const font = await new Promise((resolve, reject) => {
+            loader.load(
+                'https://cdn.jsdelivr.net/npm/three@0.159.0/examples/fonts/optimer_bold.typeface.json',
+                resolve,
+                undefined,
+                reject
+            );
+        });
         
-        debug('字体加载成功，开始创建文字');
         const text = 'Merry Christmas';
         const textGeometry = new TextGeometry(text, {
             font: font,
@@ -429,13 +304,13 @@ async function createText() {
         const textMesh = new THREE.Mesh(textGeometry, material);
         textMesh.position.x = -textWidth / 2;  // 平居中
         textMesh.position.z = 0;               // 放在中间
-        textMesh.position.y = treeHeight * 0.4;  // 垂直位置调整到的中部偏下
+        textMesh.position.y = treeHeight * 0.4;  // 垂直位置调整的中部偏下
         textMesh.rotation.x = 0;               // 移除倾斜角度
 
         scene.add(textMesh);
         return textMesh;
     } catch (error) {
-        debug('建文字最终失败: ' + error.message);
+        console.error('创建文字失败:', error);
         throw error;
     }
 }
@@ -446,7 +321,6 @@ function animate() {
 
     // 添加新粒子
     if (currentHeight < treeHeight && currentParticle < maxParticles) {
-        debug(`树生长进度: ${Math.round((currentHeight / treeHeight) * 100)}%`);
         // 树正在生长时，相机逐渐后移
         const progress = currentHeight / treeHeight;
         camera.position.z = 10 + progress * 10; // 从10到20
@@ -494,22 +368,18 @@ function animate() {
         geometry.attributes.size.needsUpdate = true;
     } else if (!isTreeComplete) {
         isTreeComplete = true;
-        debug('树生成完成，开始相机动画');
         
         // 树生成完成后，相机缓动移动到最终位置
         gsap.to(camera.position, {
             z: 20,
             y: 10,
             duration: 2,
-            ease: "power2.inOut",
-            onComplete: () => debug('相机动画完成')
+            ease: "power2.inOut"
         });
         
         // 延迟1秒后创建并动画文字
         setTimeout(() => {
-            debug('开始创建文字');
             createText().then(textMesh => {
-                debug('文字创建成功，开始动画');
                 // 从左到右显示文字
                 gsap.fromTo(textMesh.material,
                     { opacity: 0 },
@@ -528,7 +398,6 @@ function animate() {
                     ease: "back.out(1.7)"
                 });
             }).catch(error => {
-                debug('创建文字失败: ' + error.message);
             });
         }, 1000);
     }
