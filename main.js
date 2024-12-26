@@ -1,3 +1,10 @@
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+
 // 创建场景
 const scene = new THREE.Scene();
 
@@ -21,20 +28,21 @@ document.getElementById('container').appendChild(renderer.domElement);
 
 // 优化性能
 renderer.shadowMap.enabled = false;
-renderer.physicallyCorrectLights = false;
+renderer.useLegacyLights = false;  // 使���新的光照系统
 
-// 防止iOS设备上的默认触摸行为
-function preventDefaultTouch(e) {
-    if (e.touches.length > 1) {
-        e.preventDefault();
-    }
-}
+// 添加后期处理
+const composer = new EffectComposer(renderer);
+const renderPass = new RenderPass(scene, camera);
+composer.addPass(renderPass);
 
-document.addEventListener('touchstart', preventDefaultTouch, { passive: false });
-document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
-document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
-document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
-document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
+// 添加发光效果
+const bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    0.8,    // 发光强度
+    0.3,    // 发光半径
+    0.75    // 发光阈值
+);
+composer.addPass(bloomPass);
 
 // 处理iOS设备上的方向变化
 let resizeTimeout;
@@ -55,24 +63,23 @@ function handleResize() {
     }, 250);
 }
 
+// 防止iOS设备上的默认触摸行为
+function preventDefaultTouch(e) {
+    if (e.touches.length > 1) {
+        e.preventDefault();
+    }
+}
+
+document.addEventListener('touchstart', preventDefaultTouch, { passive: false });
+document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
+document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
+
 window.addEventListener('resize', handleResize);
 window.addEventListener('orientationchange', () => {
     setTimeout(handleResize, 100);
 });
-
-// 添加后期处理
-const composer = new THREE.EffectComposer(renderer);
-const renderPass = new THREE.RenderPass(scene, camera);
-composer.addPass(renderPass);
-
-// 添加发光效果
-const bloomPass = new THREE.UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.8,    // 发光强度
-    0.3,    // 发光半径
-    0.75    // 发光阈值
-);
-composer.addPass(bloomPass);
 
 // 添加灯光
 const ambientLight = new THREE.AmbientLight(0x404040);
@@ -99,7 +106,7 @@ const colors = [
     new THREE.Color(0x3d6b33), // 中绿偏深
     new THREE.Color(0x5c8a57), // 中绿
     new THREE.Color(0x7ab556), // 浅绿
-    new THREE.Color(0x98c379), // ���浅绿
+    new THREE.Color(0x98c379), // 浅绿
     new THREE.Color(0xb8d957), // 黄绿
     new THREE.Color(0xd4e157)  // 亮黄绿
 ];
@@ -197,7 +204,7 @@ function createSnow() {
     canvas.height = 32;
     const ctx = canvas.getContext('2d');
     
-    // 创建径向渐变
+    // 创建径向渐��
     const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
     gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
     gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
@@ -267,7 +274,7 @@ async function createText() {
             resolve,
             undefined,
             (error) => {
-                console.error('字体加载失败:', error);
+                console.error('体加载失败:', error);
                 reject(error);
             }
         );
