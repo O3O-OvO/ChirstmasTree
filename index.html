@@ -121,7 +121,7 @@
     
     <!-- 错误处理脚本 -->
     <script>
-        // 检测浏览器���持
+        // 检测浏览器支持
         if (!window.WebGLRenderingContext) {
             document.querySelector('#loading').innerHTML = '您的浏览器不支持WebGL，请使用现代浏览器访问。';
         }
@@ -152,15 +152,6 @@
     </script>
     
     <!-- 主程序 -->
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://esm.sh/three@0.159.0",
-            "three/examples/": "https://esm.sh/three@0.159.0/examples/",
-            "gsap": "https://esm.sh/gsap@3.12.2"
-        }
-    }
-    </script>
     <script type="module" src="./main.js"></script>
 </body>
 </html>

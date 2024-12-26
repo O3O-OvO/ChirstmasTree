@@ -1,10 +1,10 @@
-import * as THREE from 'three';
-import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
-import { gsap } from 'gsap';
+import * as THREE from 'https://esm.sh/three@0.159.0';
+import { EffectComposer } from 'https://esm.sh/three@0.159.0/examples/jsm/postprocessing/EffectComposer';
+import { RenderPass } from 'https://esm.sh/three@0.159.0/examples/jsm/postprocessing/RenderPass';
+import { UnrealBloomPass } from 'https://esm.sh/three@0.159.0/examples/jsm/postprocessing/UnrealBloomPass';
+import { FontLoader } from 'https://esm.sh/three@0.159.0/examples/jsm/loaders/FontLoader';
+import { TextGeometry } from 'https://esm.sh/three@0.159.0/examples/jsm/geometries/TextGeometry';
+import { gsap } from 'https://esm.sh/gsap@3.12.2';
 
 // 加载管理器
 const loadingManager = new THREE.LoadingManager(
@@ -122,7 +122,7 @@ async function loadWithRetry(loader, url, maxRetries = 3) {
         } catch (error) {
             debug(`加载失败 (第 ${i + 1} 次): ${error.message}`);
             if (i === maxRetries - 1) throw error;
-            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // 递增��试延迟
+            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // 递增试延迟
         }
     }
 }
