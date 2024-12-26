@@ -1,10 +1,10 @@
-import * as THREE from 'https://unpkg.com/three@0.159.0/build/three.module.js';
-import { EffectComposer } from 'https://unpkg.com/three@0.159.0/examples/jsm/postprocessing/EffectComposer.js';
-import { RenderPass } from 'https://unpkg.com/three@0.159.0/examples/jsm/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'https://unpkg.com/three@0.159.0/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { FontLoader } from 'https://unpkg.com/three@0.159.0/examples/jsm/loaders/FontLoader.js';
-import { TextGeometry } from 'https://unpkg.com/three@0.159.0/examples/jsm/geometries/TextGeometry.js';
-import { gsap } from 'https://cdn.skypack.dev/gsap@3.12.2';
+import * as THREE from 'three';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import { gsap } from 'gsap';
 
 // 加载管理器
 const loadingManager = new THREE.LoadingManager(
@@ -122,7 +122,7 @@ async function loadWithRetry(loader, url, maxRetries = 3) {
         } catch (error) {
             debug(`加载失败 (第 ${i + 1} 次): ${error.message}`);
             if (i === maxRetries - 1) throw error;
-            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // 递增重试延迟
+            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // 递增��试延迟
         }
     }
 }
@@ -404,7 +404,7 @@ async function createText() {
             font: font,
             size: 1,               // 增大字体大小
             height: 0.2,           // 增加厚度
-            curveSegments: 24,     // 增加曲细分以获得更平滑的效果
+            curveSegments: 24,     // 增加曲分以获得更平滑的效果
             bevelEnabled: true,
             bevelThickness: 0.001,   // 增加斜角厚度
             bevelSize: 0.001,        // 增加斜角大小
@@ -421,7 +421,7 @@ async function createText() {
             emissive: 0xfff4b8,     // 发光效果也为淡黄色
             emissiveIntensity: 0.8,  // 增强发光强度
             specular: 0xffffff,     // 保持白色高光
-            shininess: 100,         // 增加光泽���
+            shininess: 100,         // 增加光泽
             transparent: true,
             opacity: 0
         });
@@ -435,7 +435,7 @@ async function createText() {
         scene.add(textMesh);
         return textMesh;
     } catch (error) {
-        debug('创建文字最终失败: ' + error.message);
+        debug('建文字最终失败: ' + error.message);
         throw error;
     }
 }
