@@ -159,14 +159,16 @@ function createStar() {
     const material = new THREE.MeshPhongMaterial({
         color: 0xffd700,
         emissive: 0xffd700,
-        emissiveIntensity: 0.8,  // 调整发光强度
+        emissiveIntensity: 0.8,
         shininess: 100,
-        specular: 0xffd700       // 添加高光颜色
+        specular: 0xffd700
     });
 
     const star = new THREE.Mesh(geometry, material);
     star.position.y = treeHeight;
     star.rotation.z = Math.PI / 2;
+    // 初始缩放设为0
+    star.scale.set(0, 0, 0);
     scene.add(star);
     return star;
 }
@@ -300,14 +302,17 @@ async function createText() {
             specular: 0xffffff,     // 保持白色高光
             shininess: 100,         // 增加光泽
             transparent: true,
-            opacity: 0
+            opacity: 0,
+            depthTest: false,       // 禁用深度测试，确保文字始终在最前面
+            depthWrite: false       // 禁用深度写入
         });
 
         const textMesh = new THREE.Mesh(textGeometry, material);
         textMesh.position.x = -textWidth / 2;  // 平居中
-        textMesh.position.z = 0;               // 放在中间
+        textMesh.position.z = -5;              // 将文字移到前面
         textMesh.position.y = treeHeight * 0.4;  // 垂直位置调整的中部偏下
         textMesh.rotation.x = 0;               // 移除倾斜角度
+        textMesh.renderOrder = 999;            // 设置最高渲染优先级
 
         scene.add(textMesh);
         return textMesh;
@@ -328,6 +333,12 @@ function animate() {
         camera.position.z = 10 + progress * 10; // 从10到20
         camera.position.y = 5 + progress * 5;   // 从5到10
         camera.lookAt(0, currentHeight * 0.5, 0);
+
+        // 五角星随树的生长逐渐变大
+        const starScale = progress * 1.0; // 最终大小为1
+        star.scale.set(starScale, starScale, starScale);
+        star.position.y = currentHeight + 1;
+        star.rotation.y += 0.01;
 
         const particlesPerLayer = 4;
         for (let i = 0; i < particlesPerLayer && currentParticle < maxParticles; i++) {
@@ -371,7 +382,7 @@ function animate() {
     } else if (!isTreeComplete) {
         isTreeComplete = true;
         
-        // 树生成完成后，相机缓动移动到最终位置
+        // 树生成完成后，相机缓动移到最终位置
         gsap.to(camera.position, {
             z: 20,
             y: 10,
@@ -397,7 +408,17 @@ function animate() {
                 gsap.to(textMesh.position, {
                     y: textMesh.position.y + 2,
                     duration: 1.5,
-                    ease: "back.out(1.7)"
+                    ease: "back.out(1.7)",
+                    onComplete: () => {
+                        // 添加持续的上下浮动动画
+                        gsap.to(textMesh.position, {
+                            y: textMesh.position.y + 0.5, // 上下浮动0.5个单位
+                            duration: 2,
+                            ease: "power1.inOut",
+                            yoyo: true, // 来回浮动
+                            repeat: -1, // 无限重复
+                        });
+                    }
                 });
             }).catch(error => {
             });
@@ -406,7 +427,7 @@ function animate() {
 
     // 如果树已经创建完成，进行整体旋转
     if (isTreeComplete) {
-        treeRotation = 0.002; // 保持树的恒定旋转速度
+        treeRotation = 0.002;
         
         // 更新所有粒子的位置
         for (let i = 0; i < currentParticle * 3; i += 3) {
@@ -419,25 +440,20 @@ function animate() {
         }
         geometry.attributes.position.needsUpdate = true;
         
-        // 五角星独立缓慢旋转
-        star.rotation.y += 0.0005; // 减慢自转速
-        star.rotation.x = Math.sin(treeRotation * 0.5) * 0.1; // 添加轻微的摆动
-        star.position.y = treeHeight + 0.5 + Math.sin(treeRotation) * 0.1; // 添加上下浮动
-    } else {
-        // 树还在生长时的效果保持不变
-        for (let i = 0; i < currentParticle * 3; i += 3) {
-            positions[i] += (Math.random() - 0.5) * 0.005;
-            positions[i + 2] += (Math.random() - 0.5) * 0.005;
-        }
-        geometry.attributes.position.needsUpdate = true;
+        // 五角星跟随树的旋转
+        const starX = star.position.x;
+        const starZ = star.position.z;
+        star.position.x = starX * Math.cos(treeRotation) - starZ * Math.sin(treeRotation);
+        star.position.z = starX * Math.sin(treeRotation) + starZ * Math.cos(treeRotation);
+        
+        // 五角星自身的旋转和浮动
+        star.rotation.y += 0.01; // 加快自转速度
+        star.rotation.x = Math.sin(treeRotation * 0.5) * 0.1;
+        star.position.y = treeHeight + 0.5 + Math.sin(treeRotation) * 0.1;
     }
 
     // 更新雪花
     updateSnow();
-
-    // 更新五角星位置和旋转
-    star.rotation.y += 0.01;
-    star.position.y = currentHeight + 1;
 
     // 使用composer而不是renderer来渲染
     composer.render();
