@@ -20,15 +20,16 @@ let bloomPass;
 
 // 创建渲染器
 const renderer = new THREE.WebGLRenderer({ 
-    antialias: true,
-    powerPreference: "default",
+    antialias: false,
+    powerPreference: "high-performance",
     alpha: true,
     stencil: false,
-    precision: "mediump"
+    depth: true,
+    precision: "lowp"
 });
 
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 document.getElementById('container').appendChild(renderer.domElement);
 
@@ -49,15 +50,16 @@ try {
     const renderPass = new RenderPass(scene, camera);
     composer.addPass(renderPass);
 
-    // 添加发光效果
+    // 添加发光效果（在移动设备上降低质量）
     bloomPass = new UnrealBloomPass(
-        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2),
         0.8,
         0.3,
         0.75
     );
     composer.addPass(bloomPass);
 } catch (error) {
+    console.error('后期处理初始化失败:', error);
 }
 
 // 处理窗口大小变化
@@ -72,10 +74,10 @@ function handleResize() {
         camera.updateProjectionMatrix();
         
         renderer.setSize(width, height);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
         
         composer.setSize(width, height);
-        bloomPass.setSize(width, height);
+        bloomPass.setSize(width / 2, height / 2);
     }, 250);
 }
 
