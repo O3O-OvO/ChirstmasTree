@@ -9,28 +9,38 @@ camera.lookAt(0, 0, 0);
 // 创建渲染器
 const renderer = new THREE.WebGLRenderer({ 
     antialias: true,
-    powerPreference: "high-performance",
-    alpha: true
+    powerPreference: "default",
+    alpha: true,
+    stencil: false,
+    precision: "mediump"
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-document.body.appendChild(renderer.domElement);
+document.getElementById('container').appendChild(renderer.domElement);
+
+// 优化性能
+renderer.shadowMap.enabled = false;
+renderer.physicallyCorrectLights = false;
 
 // 防止iOS设备上的默认触摸行为
-document.addEventListener('touchstart', (e) => {
+function preventDefaultTouch(e) {
     if (e.touches.length > 1) {
         e.preventDefault();
     }
-}, { passive: false });
+}
 
-document.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-}, { passive: false });
+document.addEventListener('touchstart', preventDefaultTouch, { passive: false });
+document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
+document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
 
 // 处理iOS设备上的方向变化
-window.addEventListener('orientationchange', () => {
-    setTimeout(() => {
+let resizeTimeout;
+function handleResize() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
         const width = window.innerWidth;
         const height = window.innerHeight;
         
@@ -38,9 +48,16 @@ window.addEventListener('orientationchange', () => {
         camera.updateProjectionMatrix();
         
         renderer.setSize(width, height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        
         composer.setSize(width, height);
         bloomPass.setSize(width, height);
-    }, 100);
+    }, 250);
+}
+
+window.addEventListener('resize', handleResize);
+window.addEventListener('orientationchange', () => {
+    setTimeout(handleResize, 100);
 });
 
 // 添加后期处理
@@ -82,7 +99,7 @@ const colors = [
     new THREE.Color(0x3d6b33), // 中绿偏深
     new THREE.Color(0x5c8a57), // 中绿
     new THREE.Color(0x7ab556), // 浅绿
-    new THREE.Color(0x98c379), // 最浅绿
+    new THREE.Color(0x98c379), // ���浅绿
     new THREE.Color(0xb8d957), // 黄绿
     new THREE.Color(0xd4e157)  // 亮黄绿
 ];
@@ -215,7 +232,7 @@ function createSnow() {
 
 const snow = createSnow();
 
-// ��动画函数中更新雪花
+// 动画函数中更新雪花
 function updateSnow() {
     snow.time += 0.002;
     const positions = snow.mesh.geometry.attributes.position.array;
@@ -419,20 +436,5 @@ function animate() {
     // 使用composer而不是renderer来渲染
     composer.render();
 }
-
-// 窗口大小调整
-window.addEventListener('resize', () => {
-    // 更新相机
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    
-    // 更新渲染器
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    
-    // 更新后期处理
-    composer.setSize(window.innerWidth, window.innerHeight);
-    bloomPass.setSize(window.innerWidth, window.innerHeight);
-});
 
 animate();
