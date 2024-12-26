@@ -5,7 +5,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
-/* 调试函数 - 暂时注释
+// 调试函数
 function debug(message) {
     let debugElement = document.getElementById('debug-info');
     if (!debugElement) {
@@ -34,7 +34,6 @@ window.onerror = function(msg, url, line, col, error) {
     debug(`Error: ${msg}<br>Line: ${line}<br>Column: ${col}`);
     return false;
 };
-*/
 
 // 创建场景
 const scene = new THREE.Scene();
@@ -333,7 +332,7 @@ async function createText() {
         });
 
         const textMesh = new THREE.Mesh(textGeometry, material);
-        textMesh.position.x = -textWidth / 2;  // ��平居中
+        textMesh.position.x = -textWidth / 2;  // 平居中
         textMesh.position.z = 0;               // 放在中间
         textMesh.position.y = treeHeight * 0.4;  // 垂直位置调整到树的中部偏下
         textMesh.rotation.x = 0;               // 移除倾斜角度
