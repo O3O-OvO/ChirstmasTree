@@ -331,7 +331,7 @@ async function createText() {
         const text = 'Merry Christmas';
         const textGeometry = new TextGeometry(text, {
             font: font,
-            size: 1,               // 增大字体大小
+            size: 3,               // 增大字体大小
             height: 0.2,           // 增加厚度
             curveSegments: 24,     // 增加曲线细分以获得更平滑的效果
             bevelEnabled: true,
