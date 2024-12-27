@@ -182,51 +182,86 @@ const star = createStar();
 // 创建雪花
 function createSnow() {
     const snowGeometry = new THREE.BufferGeometry();
-    const snowCount = 2000;
+    const snowCount = 3000; // 增加雪花数量
     const snowPositions = new Float32Array(snowCount * 3);
     const snowSpeeds = new Float32Array(snowCount);
     const snowSizes = new Float32Array(snowCount);
     const snowSwayFactors = new Float32Array(snowCount);
+    const snowOpacities = new Float32Array(snowCount); // 添加透明度变化
+    
+    // 创建更大的范围
+    const areaWidth = 80;
+    const areaHeight = treeHeight * 4;
+    const areaDepth = 80;
     
     for (let i = 0; i < snowCount; i++) {
         const i3 = i * 3;
-        snowPositions[i3] = (Math.random() - 0.5) * 60;
-        snowPositions[i3 + 1] = Math.random() * treeHeight * 3;
-        snowPositions[i3 + 2] = (Math.random() - 0.5) * 60;
+        // 随机分布在更大的空间内
+        snowPositions[i3] = (Math.random() - 0.5) * areaWidth;
+        snowPositions[i3 + 1] = Math.random() * areaHeight;
+        snowPositions[i3 + 2] = (Math.random() - 0.5) * areaDepth;
         
-        snowSpeeds[i] = Math.random() * 0.03 + 0.02;
-        snowSizes[i] = Math.random() * 0.2 + 0.1;
-        snowSwayFactors[i] = Math.random() * 2 + 1;
+        // 更自然的下落速度
+        snowSpeeds[i] = Math.random() * 0.02 + 0.01;
+        // 更多样的雪花大小
+        snowSizes[i] = Math.random() * 0.15 + 0.05;
+        // 不同的摆动幅度
+        snowSwayFactors[i] = Math.random() * 1.5 + 0.5;
+        // 随机透明度
+        snowOpacities[i] = Math.random() * 0.5 + 0.3;
     }
     
     snowGeometry.setAttribute('position', new THREE.BufferAttribute(snowPositions, 3));
     snowGeometry.setAttribute('size', new THREE.BufferAttribute(snowSizes, 1));
+    snowGeometry.setAttribute('opacity', new THREE.BufferAttribute(snowOpacities, 1));
     
-    // 创建圆形雪花纹理
+    // 创建更自然的雪花纹理
     const canvas = document.createElement('canvas');
-    canvas.width = 32;
-    canvas.height = 32;
+    canvas.width = 64;
+    canvas.height = 64;
     const ctx = canvas.getContext('2d');
     
-    // 创建径向渐变
-    const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+    // 创建柔和的径向渐变
+    const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
     gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.5)');
+    gradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.8)');
+    gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.3)');
     gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
     
-    // 绘制圆形
+    // 绘制更柔和的雪花
     ctx.fillStyle = gradient;
     ctx.beginPath();
-    ctx.arc(16, 16, 16, 0, Math.PI * 2);
+    ctx.arc(32, 32, 32, 0, Math.PI * 2);
     ctx.fill();
     
     const snowTexture = new THREE.CanvasTexture(canvas);
     
-    const snowMaterial = new THREE.PointsMaterial({
-        size: 0.3,
-        map: snowTexture,
+    // 创建自定义着色器材质
+    const snowMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+            texture: { value: snowTexture },
+            time: { value: 0 }
+        },
+        vertexShader: `
+            attribute float size;
+            attribute float opacity;
+            varying float vOpacity;
+            void main() {
+                vOpacity = opacity;
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                gl_PointSize = size * (300.0 / -mvPosition.z);
+                gl_Position = projectionMatrix * mvPosition;
+            }
+        `,
+        fragmentShader: `
+            uniform sampler2D texture;
+            varying float vOpacity;
+            void main() {
+                vec4 texColor = texture2D(texture, gl_PointCoord);
+                gl_FragColor = vec4(texColor.rgb, texColor.a * vOpacity);
+            }
+        `,
         transparent: true,
-        opacity: 0.6,
         depthWrite: false,
         blending: THREE.AdditiveBlending
     });
@@ -237,36 +272,47 @@ function createSnow() {
         mesh: snow, 
         speeds: snowSpeeds, 
         swayFactors: snowSwayFactors,
-        time: 0 
+        time: 0,
+        opacities: snowOpacities
     };
 }
 
 const snow = createSnow();
 
-// 动画函数中更新雪花
+// 更新雪花动画
 function updateSnow() {
-    snow.time += 0.002;
+    snow.time += 0.001;
     const positions = snow.mesh.geometry.attributes.position.array;
+    const opacities = snow.mesh.geometry.attributes.opacity.array;
     
     for (let i = 0; i < positions.length; i += 3) {
         const index = i / 3;
         
-        // 更新垂直位置
+        // 更自然的下落运动
         positions[i + 1] -= snow.speeds[index];
         
-        // 添加水平摆动
-        positions[i] += Math.sin(snow.time + snow.swayFactors[index]) * 0.02;
-        positions[i + 2] += Math.cos(snow.time + snow.swayFactors[index]) * 0.02;
+        // 更自然的摆动
+        const swayAmount = snow.swayFactors[index];
+        const windEffect = Math.sin(snow.time * 2 + positions[i] * 0.1) * 0.1;
+        positions[i] += Math.sin(snow.time + snow.swayFactors[index]) * 0.01 * swayAmount + windEffect;
+        positions[i + 2] += Math.cos(snow.time + snow.swayFactors[index]) * 0.01 * swayAmount;
+        
+        // 透明度随高度渐变
+        const heightRatio = positions[i + 1] / (treeHeight * 4);
+        opacities[index] = snow.opacities[index] * (1 - Math.pow(heightRatio - 0.5, 2));
         
         // 当雪花落到地面以下时，重置到顶部
         if (positions[i + 1] < -5) {
-            positions[i + 1] = treeHeight * 3;
-            positions[i] = (Math.random() - 0.5) * 60;
-            positions[i + 2] = (Math.random() - 0.5) * 60;
+            positions[i + 1] = treeHeight * 4;
+            positions[i] = (Math.random() - 0.5) * 80;
+            positions[i + 2] = (Math.random() - 0.5) * 80;
+            opacities[index] = snow.opacities[index];
         }
     }
     
     snow.mesh.geometry.attributes.position.needsUpdate = true;
+    snow.mesh.geometry.attributes.opacity.needsUpdate = true;
+    snow.mesh.material.uniforms.time.value = snow.time;
 }
 
 // 创建文字
