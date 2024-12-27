@@ -97,16 +97,20 @@ let currentRotation = 0;
 let isTreeComplete = false;  // 添加标志来判断树否创建完成
 let treeRotation = 0;       // 添加树的整旋转角度
 
-// 颜色组
+// 颜色组 - 使用彩虹色渐变
 const colors = [
-    new THREE.Color(0x1a472a), // 深绿
-    new THREE.Color(0x2d5a27), // 中深绿
-    new THREE.Color(0x3d6b33), // 中绿偏深
-    new THREE.Color(0x5c8a57), // 中绿
-    new THREE.Color(0x7ab556), // 浅绿
-    new THREE.Color(0x98c379), // 浅绿
-    new THREE.Color(0xb8d957), // 黄绿
-    new THREE.Color(0xd4e157)  // 亮黄
+    new THREE.Color(0xff0000), // 红色
+    new THREE.Color(0xff4500), // 橙红
+    new THREE.Color(0xff8c00), // 深橙
+    new THREE.Color(0xffd700), // 金色
+    new THREE.Color(0x9ef01a), // 黄绿
+    new THREE.Color(0x32cd32), // 酸橙绿
+    new THREE.Color(0x00ff7f), // 春绿
+    new THREE.Color(0x40e0d0), // 绿松石
+    new THREE.Color(0x1e90ff), // 道奇蓝
+    new THREE.Color(0x9370db), // 中紫
+    new THREE.Color(0xff69b4), // 粉红
+    new THREE.Color(0xff1493)  // 深粉红
 ];
 
 // 创建粒子系统
