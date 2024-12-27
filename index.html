@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>圣诞树</title>
+    <!-- IconPark -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@icon-park/css@latest/index.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@icon-park/javascript@latest/lib/index.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -304,6 +307,7 @@
             width: 80px;
             margin: 0 10px;
             -webkit-appearance: none;
+            appearance: none;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 10px;
             height: 4px;
@@ -338,6 +342,52 @@
             transform: scale(1.2);
         }
 
+        .control-btn .icon {
+            width: 24px;
+            height: 24px;
+            color: #ffffff;
+            fill: #ffffff;
+            stroke: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover .icon {
+            transform: scale(1.1);
+            color: #00ff00;
+            fill: #00ff00;
+            stroke: #00ff00;
+        }
+
+        .playlist-item .play-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .playlist-item .icon {
+            width: 20px;
+            height: 20px;
+            color: #ffffff;
+            fill: #ffffff;
+            stroke: #ffffff;
+        }
+
+        .control-btn i {
+            font-size: 24px;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover i {
+            transform: scale(1.1);
+            color: #00ff00;
+        }
+
+        .playlist-item .play-icon i {
+            font-size: 20px;
+            color: #ffffff;
+        }
+
     </style>
 </head>
 <body>
@@ -348,7 +398,7 @@
         </div>
         <div class="section" id="music-section">
             <div class="music-container">
-                <h2 class="music-title">圣诞音乐</h2>
+                <h2 class="music-title">Music</h2>
                 <div class="playlist">
                     <div class="playlist-item">
                         <div class="play-icon">▶</div>
