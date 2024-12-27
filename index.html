@@ -56,7 +56,7 @@
         }
 
         #music-section {
-            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            background: none;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -71,10 +71,12 @@
         .music-container {
             width: 90%;
             max-width: 600px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.5);
             border-radius: 15px;
             padding: 20px;
             backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
 
         .music-title {
@@ -95,19 +97,21 @@
             align-items: center;
             padding: 10px;
             margin: 10px 0;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .playlist-item:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.15);
             transform: translateX(5px);
         }
 
         .playlist-item.playing {
             background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .play-icon {
@@ -155,10 +159,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .control-btn:hover {
             background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             transform: scale(1.1);
         }
 
@@ -276,6 +282,62 @@
             }
         }
 
+        .volume-control {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .volume-slider-container {
+            width: 0;
+            overflow: hidden;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .volume-control:hover .volume-slider-container {
+            width: 100px;
+        }
+
+        .volume-slider {
+            width: 80px;
+            margin: 0 10px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            height: 4px;
+            outline: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .volume-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            border: none;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .volume-slider::-moz-range-thumb:hover {
+            transform: scale(1.2);
+        }
+
     </style>
 </head>
 <body>
@@ -298,7 +360,7 @@
                     <div class="playlist-item">
                         <div class="play-icon">▶</div>
                         <div class="song-info">
-                            <div class="song-name">Silent Night</div>
+                            <div class="song-name">圣诞结</div>
                             <div class="artist">Traditional</div>
                         </div>
                     </div>
@@ -307,6 +369,13 @@
                         <div class="song-info">
                             <div class="song-name">Last Christmas</div>
                             <div class="artist">Wham!</div>
+                        </div>
+                    </div>
+                    <div class="playlist-item">
+                        <div class="play-icon">▶</div>
+                        <div class="song-info">
+                            <div class="song-name">Merry Christmas Mr. Lawrence</div>
+                            <div class="artist">坂本龍一</div>
                         </div>
                     </div>
                 </div>
@@ -321,6 +390,13 @@
                     <button class="control-btn" id="prev">⏮</button>
                     <button class="control-btn" id="play">▶</button>
                     <button class="control-btn" id="next">⏭</button>
+                    <button class="control-btn" id="playMode" title="播放模式">🔁</button>
+                    <div class="volume-control">
+                        <button class="control-btn" id="volumeBtn">🔊</button>
+                        <div class="volume-slider-container">
+                            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

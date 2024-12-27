@@ -22,7 +22,7 @@ camera.lookAt(0, 4, 0);
 let composer;
 let bloomPass;
 let isTreeComplete = false;  // 移到顶部，作为全局变量
-let treeRotation = 0;       // 添加树的旋转角度
+let treeRotation = 0;       // 添加树的转角度
 
 // 树的参数
 const treeHeight = 15;
@@ -68,7 +68,7 @@ try {
     console.error('后期处理初始化失败:', error);
 }
 
-// 处理���大小变化
+// 处理大小变化
 let resizeTimeout;
 function handleResize() {
     clearTimeout(resizeTimeout);
@@ -228,7 +228,7 @@ function createSnow() {
         snowPositions[i3 + 2] = (Math.random() - 0.5) * areaDepth - camera.position.z;
         
         // 调整雪花大小和速度
-        snowSizes[i] = Math.random() * 0.1 + 0.05; // 更小的雪花
+        snowSizes[i] = Math.random() * 0.1 + 0.05; // 更小的雪
         snowSpeeds[i] = (0.015 + Math.random() * 0.01) * (1 - snowSizes[i] * 2); // 降低落速度
         
         snowSwayFactors[i] = Math.random() * 0.3 + 0.1; // 小摆动幅度
@@ -286,33 +286,24 @@ const snow = createSnow();
 
 // 更新雪花动画
 function updateSnow() {
-    snow.time += 0.001;
     const positions = snow.mesh.geometry.attributes.position.array;
-    const sizes = snow.mesh.geometry.attributes.size.array;
     
     for (let i = 0; i < positions.length; i += 3) {
         const index = i / 3;
         
-        // 基于大小的下落速度
-        const fallSpeed = snow.speeds[index] * (1 + Math.sin(snow.time + index) * 0.2);
+        // 简单的下落速度，基于雪花大小
+        const fallSpeed = snow.speeds[index];
         positions[i + 1] -= fallSpeed;
         
-        // 更自然的摆动（考虑风的影响）
-        const swayAmount = snow.swayFactors[index];
-        const windStrength = Math.sin(snow.time * 0.5) * 0.5 + 0.5; // 风力变化
-        const windDirection = Math.sin(snow.time * 0.2); // 风向变化
-        const windEffect = Math.sin(snow.time + positions[i] * 0.1) * 0.05 * windStrength;
+        // 轻微的左右摆动，但不受风力影响
+        const swayAmount = snow.swayFactors[index] * 0.1;
+        positions[i] += Math.sin(snow.time + snow.rotations[index]) * swayAmount;
         
-        // 水平运动（考虑风向）
-        positions[i] += (Math.sin(snow.time + snow.rotations[index]) * 0.01 * swayAmount + windEffect) * windDirection;
-        positions[i + 2] += Math.cos(snow.time + snow.rotations[index]) * 0.01 * swayAmount;
-        
-        // 当雪花超出视野范围时置位置
+        // 当雪花超出视野范围时重置位置
         if (positions[i + 1] < camera.position.y - snow.height/2) {
             positions[i + 1] = camera.position.y + snow.height/2;
             positions[i] = (Math.random() - 0.5) * snow.width;
             positions[i + 2] = (Math.random() - 0.5) * snow.depth - camera.position.z;
-            // 重置旋转角度
             snow.rotations[index] = Math.random() * Math.PI * 2;
         }
         
@@ -325,6 +316,7 @@ function updateSnow() {
         }
     }
     
+    snow.time += 0.001;
     snow.mesh.geometry.attributes.position.needsUpdate = true;
 }
 
@@ -530,9 +522,8 @@ function handleScroll() {
             // 根据滚动位置调整场景
             const scrollProgress = lastScrollY / window.innerHeight;
             
-            // 使用 transform3d 触发 GPU 加速
+            // 使用 transform3d 触发 GPU 加速，但不再改变透明度
             container.style.transform = `translate3d(0, ${scrollProgress * 30}px, 0)`;
-            container.style.opacity = 1 - (scrollProgress * 0.8);
             
             // 更新按钮状态和isAtTop变量
             if (scrollProgress >= 0.5 && isAtTop) {
@@ -545,12 +536,8 @@ function handleScroll() {
                 isAtTop = true;
             }
             
-            // 只在完全滚动到音乐页面时禁用渲染
-            if (scrollProgress >= 1) {
-                composer.enabled = false;
-            } else {
-                composer.enabled = true;
-            }
+            // 保持渲染器始终启用
+            composer.enabled = true;
             
             ticking = false;
         });
