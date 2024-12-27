@@ -384,10 +384,12 @@ function animate() {
         camera.position.y = 5 + progress * 5;   // 从5到10
         camera.lookAt(0, currentHeight * 0.5, 0);
 
-        // 五角星随树的生长逐渐变大
+        // 五角星随树的生长逐渐变大并跟随树顶
         const starScale = progress * 1.0; // 最终大小为1
         star.scale.set(starScale, starScale, starScale);
         star.position.y = currentHeight + 1;
+        star.position.x = 0; // 确保在中轴线上
+        star.position.z = 0; // 确保在中轴线上
         star.rotation.y += 0.01;
 
         const particlesPerLayer = 4;
@@ -432,12 +434,21 @@ function animate() {
     } else if (!isTreeComplete) {
         isTreeComplete = true;
         
-        // 树生成完成后，相机缓动移到最终位置
+        // 树生成完成后，相机缓动移动到最终位置
         gsap.to(camera.position, {
             z: 20,
             y: 10,
             duration: 2,
             ease: "power2.inOut"
+        });
+
+        // 调整五角星到最终位置
+        gsap.to(star.position, {
+            y: treeHeight + 1.5, // 略高于树顶
+            x: 0, // 确保在中轴线上
+            z: 0, // 确保在中轴线上
+            duration: 1,
+            ease: "power2.out"
         });
         
         // 延迟1秒后创建并动画文字
@@ -490,16 +501,10 @@ function animate() {
         }
         geometry.attributes.position.needsUpdate = true;
         
-        // 五角星跟随树的旋转
-        const starX = star.position.x;
-        const starZ = star.position.z;
-        star.position.x = starX * Math.cos(treeRotation) - starZ * Math.sin(treeRotation);
-        star.position.z = starX * Math.sin(treeRotation) + starZ * Math.cos(treeRotation);
-        
-        // 五角星自身的旋转和浮动
+        // 五角星跟随树的旋转，但保持在中轴线上
         star.rotation.y += 0.01; // 加快自转速度
         star.rotation.x = Math.sin(treeRotation * 0.5) * 0.1;
-        star.position.y = treeHeight + 0.5 + Math.sin(treeRotation) * 0.1;
+        star.position.y = treeHeight + 1.5 + Math.sin(treeRotation) * 0.1; // 保持在树顶上方并轻微浮动
     }
 
     // 更新雪花
