@@ -22,7 +22,7 @@ camera.lookAt(0, 4, 0);
 let composer;
 let bloomPass;
 let isTreeComplete = false;  // 移到顶部，作为全局变量
-let treeRotation = 0;       // 添加树的转角度
+let treeRotation = 0;       // 添加树的���转
 
 // 树的参数
 const treeHeight = 15;
@@ -52,16 +52,16 @@ scene.add(directionalLight);
 
 try {
     // 添加后期处理
+    const renderScene = new RenderPass(scene, camera);
     composer = new EffectComposer(renderer);
-    const renderPass = new RenderPass(scene, camera);
-    composer.addPass(renderPass);
+    composer.addPass(renderScene);
 
-    // 添加发光效果（在移动设备上降低质量）
+    // 添加辉光效果
     bloomPass = new UnrealBloomPass(
-        new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2),
-        0.8,
-        0.3,
-        0.75
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        1.5,   // 强度
+        0.4,   // 半径
+        0.85   // 阈值
     );
     composer.addPass(bloomPass);
 } catch (error) {
@@ -185,20 +185,25 @@ function createStar() {
     const material = new THREE.MeshPhongMaterial({
         color: 0xffd700,
         emissive: 0xffd700,
-        emissiveIntensity: 0.8,
-        shininess: 100,
-        specular: 0xffd700
+        emissiveIntensity: 1.2,
+        shininess: 80,
+        specular: 0xffd700,
+        transparent: true,
+        opacity: 1,
+        side: THREE.DoubleSide
     });
 
     const star = new THREE.Mesh(geometry, material);
-    star.position.y = treeHeight;
+    star.position.y = treeHeight + 1;
+    star.position.z = 0;
+    star.position.x = 0;
     star.rotation.z = Math.PI / 2;
-    // 初始缩放设置为0
-    star.scale.set(0, 0, 0);
+    star.scale.set(2, 2, 2);  // 增大五角星的尺寸
     scene.add(star);
     return star;
 }
 
+// 创建五角星并保存引用
 const star = createStar();
 
 // 创建雪花
@@ -404,17 +409,91 @@ let requestAnimationFrameId;
 
 // 在文件开头添加时间相关变量
 let lastTime = Date.now();
-const ROTATION_SPEED = 0.1; // 降低旋转速度，每秒旋转0.05弧度（约2.86度）
+const ROTATION_SPEED = 0.1; // 树的旋转速度
+const STAR_ROTATION_SPEED = 0.3; // 五角星的旋转速度，比树快3倍
 
-// 修改动画函数
+// 创建星星系统
+function createStars() {
+    const starsGeometry = new THREE.BufferGeometry();
+    const starsCount = 1500;  // 增加星星数量
+    const positions = new Float32Array(starsCount * 3);
+    const sizes = new Float32Array(starsCount);
+    const opacities = new Float32Array(starsCount);  // 添加透明度数组
+
+    for (let i = 0; i < starsCount; i++) {
+        // 随机位置，扩大分布范围
+        positions[i * 3] = (Math.random() - 0.5) * 2500;      // x
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 1500;  // y
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 2500;  // z
+
+        // 随机大小，增加变化范围
+        sizes[i] = Math.random() * 4 + 1;  // 1-5之间的随机大小
+        
+        // 随机透明度
+        opacities[i] = Math.random() * 0.5 + 0.5;  // 0.5-1之间的随机透明度
+    }
+
+    starsGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    starsGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+    starsGeometry.setAttribute('opacity', new THREE.BufferAttribute(opacities, 1));
+
+    // 创建自定义着色器材质
+    const starsMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+            pointTexture: {
+                value: new THREE.TextureLoader().load('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAF8WlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNy4yLWMwMDAgNzkuMWI2NWE3OWI0LCAyMDIyLzA2LzEzLTIyOjAxOjAxICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdEV2dD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlRXZlbnQjIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iIHhtbG5zOnBob3Rvc2hvcD0iaHR0cDovL25zLmFkb2JlLmNvbS9waG90b3Nob3AvMS4wLyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgMjQuMCAoTWFjaW50b3NoKSIgeG1wOkNyZWF0ZURhdGU9IjIwMjMtMTItMjFUMTU6NDc6NDcrMDg6MDAiIHhtcDpNZXRhZGF0YURhdGU9IjIwMjMtMTItMjFUMTU6NDc6NDcrMDg6MDAiIHhtcDpNb2RpZnlEYXRlPSIyMDIzLTEyLTIxVDE1OjQ3OjQ3KzA4OjAwIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjY2ZWJkMzA1LTYwZTYtNDFhNi1hMmI1LTNiOWZhZmZlYTQ1YyIgeG1wTU06RG9jdW1lbnRJRD0iYWRvYmU6ZG9jaWQ6cGhvdG9zaG9wOjVlZTBmOTZiLTFiZDAtYzU0OC1hMzg5LTYyYmY5ODk5ZWY5ZiIgeG1wTU06T3JpZ2luYWxEb2N1bWVudElEPSJ4bXAuZGlkOjNhYzA5ZmE1LTY3ZTctNDFhZi1hZTM3LTlmY2Y4ZWRmMzQzYyIgZGM6Zm9ybWF0PSJpbWFnZS9wbmciIHBob3Rvc2hvcDpDb2xvck1vZGU9IjMiPiA8eG1wTU06SGlzdG9yeT4gPHJkZjpTZXE+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJjcmVhdGVkIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOjNhYzA5ZmE1LTY3ZTctNDFhZi1hZTM3LTlmY2Y4ZWRmMzQzYyIgc3RFdnQ6d2hlbj0iMjAyMy0xMi0yMVQxNTo0Nzo0NyswODowMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIDI0LjAgKE1hY2ludG9zaCkiLz4gPHJkZjpsaSBzdEV2dDphY3Rpb249InNhdmVkIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOjY2ZWJkMzA1LTYwZTYtNDFhNi1hMmI1LTNiOWZhZmZlYTQ1YyIgc3RFdnQ6d2hlbj0iMjAyMy0xMi0yMVQxNTo0Nzo0NyswODowMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIDI0LjAgKE1hY2ludG9zaCkiIHN0RXZ0OmNoYW5nZWQ9Ii8iLz4gPC9yZGY6U2VxPiA8L3htcE1NOkhpc3Rvcnk+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+YcP6RgAAAZJJREFUWIXtlz1LA0EQht+9XAQRFBsLwUZtbAQbGxsLwcLGH2BhYWFhYWEhiGBhYWEhgkWwsLAQREQQRBBBgkJAMCSB5HJ+FN7GhBDuNnd7Nxa+sLB7zO3DzM7s7BlEhP+EdegEbPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7EMn4NiHTsCxD52AYx86Acc+dAKOfegEHPvQCTj2oRNw7H8BmxlzJYmv0EMAAAAASUVORK5CYII=')
+            },
+            time: { value: 0 }
+        },
+        vertexShader: `
+            attribute float size;
+            attribute float opacity;
+            varying float vOpacity;
+            void main() {
+                vOpacity = opacity;
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                gl_PointSize = size * (300.0 / -mvPosition.z);
+                gl_Position = projectionMatrix * mvPosition;
+            }
+        `,
+        fragmentShader: `
+            uniform sampler2D pointTexture;
+            varying float vOpacity;
+            void main() {
+                gl_FragColor = texture2D(pointTexture, gl_PointCoord);
+                gl_FragColor.a *= vOpacity;
+            }
+        `,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+    });
+
+    // 创建星星系统
+    const starSystem = new THREE.Points(starsGeometry, starsMaterial);
+    scene.add(starSystem);
+
+    return starSystem;
+}
+
+const starSystem = createStars();
+
+// 修改主animate函数，整合星星动画
 function animate() {
     requestAnimationFrameId = requestAnimationFrame(animate);
     
     // 计算时间增量
     const currentTime = Date.now();
-    const deltaTime = (currentTime - lastTime) / 1000; // 转换为秒
+    const deltaTime = (currentTime - lastTime) / 1000; // ���换为秒
     lastTime = currentTime;
     
+    // 更新星星动画
+    if (starSystem) {
+        starSystem.rotation.y += 0.0001;
+        starSystem.rotation.x += 0.00005;
+        starSystem.material.uniforms.time.value += 0.001;
+    }
+
     // 添加新粒子（树的生长阶段）
     if (!isTreeComplete && currentHeight < treeHeight && currentParticle < maxParticles) {
         // 树正在生长时，相机缓慢上移和后移
@@ -434,7 +513,7 @@ function animate() {
         const particlesPerLayer = 6; // 增加每层的粒子数
         for (let i = 0; i < particlesPerLayer && currentParticle < maxParticles; i++) {
             const heightRatio = currentHeight / treeHeight;
-            const radius = 6 * (1 - Math.pow(heightRatio, 1.5)); // 增大基础半径
+            const radius = 6 * (1 - Math.pow(heightRatio, 1.5)); // 增大基础径
             
             const angle = currentRotation + (i / particlesPerLayer) * Math.PI * 2;
             const x = radius * Math.cos(angle);
@@ -494,10 +573,10 @@ function animate() {
         }
         geometry.attributes.position.needsUpdate = true;
         
-        // 五角星动画 - 同步旋转速度
-        star.rotation.y += ROTATION_SPEED * deltaTime;
+        // 五角星动画 - 使用更快的旋转速度
+        star.rotation.y += STAR_ROTATION_SPEED * deltaTime;
         // 保持轻微的浮动效果
-        star.rotation.x = Math.sin(currentTime * 0.0005) * 0.1; // 降低浮动频率
+        star.rotation.x = Math.sin(currentTime * 0.0005) * 0.1;
         star.position.y = treeHeight + 1.5 + Math.sin(currentTime * 0.0005) * 0.1;
     }
 
@@ -603,7 +682,7 @@ scrollButton.addEventListener('click', scrollToMusicSection);
 
 // 修改树生成完成的处理逻辑
 function onTreeComplete() {
-    // 树生成完成后，相机缓动移动到最终位置
+    // 树生成完成后，相机缓动到最终位置
     gsap.to(camera.position, {
         z: 20,
         y: 10,

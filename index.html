@@ -80,6 +80,40 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+        }
+
+        .switch-greeting-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(5px);
+            z-index: 3;
+        }
+
+        .switch-greeting-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .switch-greeting-btn.left {
+            left: -60px;
+        }
+
+        .switch-greeting-btn.right {
+            right: -60px;
         }
 
         .music-title {
@@ -218,6 +252,20 @@
                 width: 35px;
                 height: 35px;
             }
+
+            .switch-greeting-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+            }
+
+            .switch-greeting-btn.left {
+                left: -46px;
+            }
+
+            .switch-greeting-btn.right {
+                right: -46px;
+            }
         }
 
         .scroll-hint {
@@ -228,12 +276,11 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            width: 50px;
-            height: 50px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(5px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            background-color: transparent;
+            border: none;
             cursor: pointer;
             opacity: 0;
             transition: all 0.3s ease;
@@ -245,23 +292,22 @@
 
         .scroll-button::before {
             content: '';
-            width: 12px;
-            height: 12px;
-            border-right: 3px solid rgba(255, 255, 255, 0.8);
-            border-bottom: 3px solid rgba(255, 255, 255, 0.8);
+            width: 8px;
+            height: 8px;
+            border-right: 2px solid rgba(255, 255, 255, 0.8);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.8);
             transition: transform 0.3s ease;
         }
 
         .scroll-button.up::before {
-            transform: rotate(-135deg) translate(-2px, -2px);
+            transform: rotate(-135deg) translate(-1px, -1px);
         }
 
         .scroll-button.down::before {
-            transform: rotate(45deg) translate(-2px, -2px);
+            transform: rotate(45deg) translate(-1px, -1px);
         }
 
         .scroll-button:hover {
-            background-color: rgba(255, 255, 255, 0.3);
             transform: scale(1.1);
         }
 
@@ -275,10 +321,10 @@
 
         @keyframes pulse {
             0% {
-                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
             }
             70% {
-                box-shadow: 0 0 0 15px rgba(255, 255, 255, 0);
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
             }
             100% {
                 box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
@@ -388,6 +434,222 @@
             color: #ffffff;
         }
 
+        /* 祝福卡片样式 */
+        #greeting-section {
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #greeting-section.active {
+            transform: translateX(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .greeting-container {
+            width: 90%;
+            max-width: 600px;
+            perspective: 1000px;
+            transform: translateX(50px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #greeting-section.active .greeting-container {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .greeting-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateY(0deg);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+
+        .greeting-card:hover {
+            transform: rotateY(5deg) translateZ(10px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .greeting-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            transform: translateZ(20px);
+        }
+
+        .greeting-text {
+            font-size: 24px;
+            color: #fff;
+            margin-bottom: 30px;
+            line-height: 1.5;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.2s;
+        }
+
+        #greeting-section.active .greeting-text {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .refresh-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        #greeting-section.active .refresh-btn {
+            transform: translateY(0);
+            opacity: 1;
+            transition-delay: 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .greeting-decorations div {
+            position: absolute;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #greeting-section.active .greeting-decorations div {
+            opacity: 0.8;
+            transition-delay: 0.4s;
+        }
+
+        .snowflake-1 {
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .snowflake-2 {
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            animation: float 3s ease-in-out infinite 1s;
+        }
+
+        .santa {
+            bottom: 20px;
+            left: 20px;
+            font-size: 32px;
+            animation: slide 8s linear infinite;
+        }
+
+        .gift {
+            bottom: 20px;
+            right: 20px;
+            font-size: 28px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        .tree {
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 32px;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px) rotate(5deg);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0) rotate(-5deg);
+            }
+            50% {
+                transform: translateY(-15px) rotate(5deg);
+            }
+        }
+
+        @keyframes slide {
+            0% {
+                transform: translateX(-100%) rotate(5deg);
+            }
+            100% {
+                transform: translateX(400%) rotate(-5deg);
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                filter: brightness(1);
+                transform: translateX(-50%) scale(1);
+            }
+            50% {
+                filter: brightness(1.3);
+                transform: translateX(-50%) scale(1.1);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .greeting-text {
+                font-size: 20px;
+                padding: 0 10px;
+            }
+
+            .refresh-btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+
+            .greeting-decorations div {
+                font-size: 20px;
+            }
+
+            .greeting-card {
+                padding: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -398,6 +660,8 @@
         </div>
         <div class="section" id="music-section">
             <div class="music-container">
+                <button class="switch-greeting-btn left">🎅</button>
+                <button class="switch-greeting-btn right">🎅</button>
                 <h2 class="music-title">Music</h2>
                 <div class="playlist">
                     <div class="playlist-item">
@@ -450,11 +714,29 @@
                 </div>
             </div>
         </div>
+        <div class="section" id="greeting-section">
+            <div class="greeting-container">
+                <div class="greeting-card">
+                    <div class="greeting-content">
+                        <div class="greeting-text"></div>
+                        <button class="refresh-btn">🎄 换一个祝福</button>
+                    </div>
+                    <div class="greeting-decorations">
+                        <div class="snowflake-1">❄️</div>
+                        <div class="snowflake-2">❄️</div>
+                        <div class="santa">🎅</div>
+                        <div class="gift">🎁</div>
+                        <div class="tree">🎄</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script type="module" src="main.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="music.js"></script>
+    <script src="greeting.js"></script>
 </body>
 </html>
 
